@@ -34,7 +34,7 @@ def priceAdjust(sell_percentage, overall_range, prices):
         prices[f'{overall_range}']['Buy Price'] = float(prices[f'{overall_range}']['Sell Price']) * .8
     return prices
 
-if Path('./Config Settings.txt').is_file():
+if Path('./Config Settings.txt').is_file(): # Setup config settings file or use the existing one
     file = open('Config Settings.txt')
     config_settings = []
     for line in file:
@@ -42,34 +42,12 @@ if Path('./Config Settings.txt').is_file():
     print(config_settings)
 else:
     config_settings = ['Initialized: 0']
-if config_settings[0][-1:] == '0':
-    prices = {}
-    print('Welcome to the Madden AH Tool. Let\'s begin with some basics.')
-    overall_range = input('What overall\'s are you viewing? ')
-    prices = initializeTool(prices, overall_range)
-    sell_percentage = salesReport()
-    prices = priceAdjust(sell_percentage, overall_range, prices)
-    print('Relist cards at: ' + str(prices[f'{overall_range}']['Sell Price']))
-    print('Buy new cards at: ' + str(prices[f'{overall_range}']['Buy Price']))
-    config_settings.append(f'{overall_range}')
-    config_settings.append(prices[f'{overall_range}']['Sell Price'])
-    config_settings.append(prices[f'{overall_range}']['Buy Price'])
-    config_settings[0] = 'Initialized: 1'
-else:
-    prices = {}
-    print('Welcome back to the Madden AH Tool.')
-    overall_range = input('What overall\'s are you viewing? ')
-    prices[f'{overall_range}'] = {}
-    for x in range(len(config_settings)):
-        if config_settings[x] == overall_range:
-            priceIndex = x + 1
-            prices[f'{overall_range}']['Sell Price'] = config_settings[priceIndex]
-            prices[f'{overall_range}']['Buy Price'] = config_settings[priceIndex+1]
-            overall_found = True
-            break
-        else:
-            overall_found = False
-    if not overall_found:
+
+while True:
+    if config_settings[0][-1:] == '0': # First time use procedure
+        prices = {}
+        print('Welcome to the Madden AH Tool. Let\'s begin with some basics.')
+        overall_range = input('What overall\'s are you viewing? ')
         prices = initializeTool(prices, overall_range)
         sell_percentage = salesReport()
         prices = priceAdjust(sell_percentage, overall_range, prices)
@@ -78,17 +56,47 @@ else:
         config_settings.append(f'{overall_range}')
         config_settings.append(prices[f'{overall_range}']['Sell Price'])
         config_settings.append(prices[f'{overall_range}']['Buy Price'])
-    else:
-        print('Relist cards at: ' + str(prices[f'{overall_range}']['Sell Price']))
-        print('Buy new cards at: ' + str(prices[f'{overall_range}']['Buy Price']))
-        sell_percentage = salesReport()
-        prices = priceAdjust(sell_percentage, overall_range, prices)
-        config_settings[priceIndex] = prices[f'{overall_range}']['Sell Price']
-        config_settings[priceIndex+1] = prices[f'{overall_range}']['Buy Price']
-        print('Relist cards at: ' + str(prices[f'{overall_range}']['Sell Price']))
-        print('Buy new cards at: ' + str(prices[f'{overall_range}']['Buy Price']))
+        config_settings[0] = 'Initialized: 1'
+    else: # Using tool after first time
+        prices = {}
+        print('Welcome back to the Madden AH Tool.')
+        overall_range = input('What overall\'s are you viewing? ')
+        prices[f'{overall_range}'] = {}
 
-file = open('Config Settings.txt', 'w')
-for setting in config_settings:
-    file.write(str(setting) + '\n')
-file.close()
+        for x in range(len(config_settings)): # Setup overall range and see if that range has established prices already
+            if config_settings[x] == overall_range:
+                priceIndex = x + 1
+                prices[f'{overall_range}']['Sell Price'] = config_settings[priceIndex]
+                prices[f'{overall_range}']['Buy Price'] = config_settings[priceIndex+1]
+                overall_found = True
+                break
+            else:
+                overall_found = False
+        
+        if not overall_found: # Setup a new overall range
+            prices = initializeTool(prices, overall_range)
+            sell_percentage = salesReport()
+            prices = priceAdjust(sell_percentage, overall_range, prices)
+            print('Relist cards at: ' + str(prices[f'{overall_range}']['Sell Price']))
+            print('Buy new cards at: ' + str(prices[f'{overall_range}']['Buy Price']))
+            config_settings.append(f'{overall_range}')
+            config_settings.append(prices[f'{overall_range}']['Sell Price'])
+            config_settings.append(prices[f'{overall_range}']['Buy Price'])
+
+        else: # Use an existing overall range
+            print('Relist cards at: ' + str(prices[f'{overall_range}']['Sell Price']))
+            print('Buy new cards at: ' + str(prices[f'{overall_range}']['Buy Price']))
+            sell_percentage = salesReport()
+            prices = priceAdjust(sell_percentage, overall_range, prices)
+            config_settings[priceIndex] = prices[f'{overall_range}']['Sell Price']
+            config_settings[priceIndex+1] = prices[f'{overall_range}']['Buy Price']
+            print('Relist cards at: ' + str(prices[f'{overall_range}']['Sell Price']))
+            print('Buy new cards at: ' + str(prices[f'{overall_range}']['Buy Price']))
+
+    file = open('Config Settings.txt', 'w') # Put config settings back in file
+    for setting in config_settings:
+        file.write(str(setting) + '\n')
+    file.close()
+
+    quit_now = input('Would you like to quit? Enter "-1" to do so. Otherwise, enter any character. ')
+    if quit_now == '-1': break
